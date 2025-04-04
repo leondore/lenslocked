@@ -14,19 +14,19 @@ import (
 func main() {
 	r := chi.NewRouter()
 
-	tpl, err := views.ParseFS(templates.FS, "home.gohtml")
+	tpl, err := views.ParseFS(templates.FS, "layout-page.gohtml", "home.gohtml")
 	if err != nil {
 		panic(err)
 	}
 	r.Get("/", controllers.StaticHandler(tpl))
 
-	tpl, err = views.ParseFS(templates.FS, "contact.gohtml")
+	tpl, err = views.ParseFS(templates.FS, "layout-page.gohtml", "contact.gohtml")
 	if err != nil {
 		panic(err)
 	}
 	r.Get("/contact", controllers.StaticHandler(tpl))
 
-	tpl, err = views.ParseFS(templates.FS, "faq.gohtml")
+	tpl, err = views.ParseFS(templates.FS, "layout-page.gohtml", "faq.gohtml")
 	if err != nil {
 		panic(err)
 	}
