@@ -14,23 +14,24 @@ import (
 func main() {
 	r := chi.NewRouter()
 
-	tpl, err := views.ParseFS(templates.FS, "layout-page.gohtml", "home.gohtml")
-	if err != nil {
-		panic(err)
-	}
-	r.Get("/", controllers.StaticHandler(tpl))
+	r.Get("/", controllers.StaticHandler(
+		views.Must(views.ParseFS(templates.FS, "layout-page.gohtml", "home.gohtml")),
+	))
 
-	tpl, err = views.ParseFS(templates.FS, "layout-page.gohtml", "contact.gohtml")
-	if err != nil {
-		panic(err)
-	}
-	r.Get("/contact", controllers.StaticHandler(tpl))
+	r.Get("/contact", controllers.StaticHandler(
+		views.Must(views.ParseFS(templates.FS, "layout-page.gohtml", "contact.gohtml")),
+	))
 
-	tpl, err = views.ParseFS(templates.FS, "layout-page.gohtml", "faq.gohtml")
-	if err != nil {
-		panic(err)
-	}
-	r.Get("/faq", controllers.StaticHandler(tpl))
+	r.Get("/faq", controllers.StaticHandler(
+		views.Must(views.ParseFS(templates.FS, "layout-page.gohtml", "faq.gohtml")),
+	))
+
+	usersController := controllers.Users{}
+	usersController.Templates.New = views.Must(views.ParseFS(
+		templates.FS,
+		"layout-page.gohtml", "signup.gohtml",
+	))
+	r.Get("/signup", usersController.New)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
