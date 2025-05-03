@@ -32,6 +32,7 @@ func main() {
 		"layout-page.gohtml", "signup.gohtml",
 	))
 	r.Get("/signup", usersController.New)
+	r.Post("/users", usersController.Create)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
