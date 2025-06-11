@@ -23,6 +23,16 @@ func (u Users) New(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u Users) Create(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Email: ", r.FormValue("email"))
-	fmt.Fprint(w, "Password: ", r.FormValue("password"))
+	newUser := models.NewUser{}
+	newUser.Email = r.FormValue("email")
+	newUser.Password = r.FormValue("password")
+
+	savedUser, err := u.UserService.Create(newUser)
+	if err != nil {
+		fmt.Println(err)
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "User successfully created: %s", savedUser.Email)
 }
