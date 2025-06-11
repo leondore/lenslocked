@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/leondore/lenslocked/controllers"
+	"github.com/leondore/lenslocked/models"
 	"github.com/leondore/lenslocked/templates"
 	"github.com/leondore/lenslocked/views"
 
@@ -12,6 +15,16 @@ import (
 )
 
 func main() {
+	// Open database connection
+	cfg := models.DefaultPostgresConfig()
+	db, err := models.Open(cfg)
+	if err != nil {
+		log.Fatalf("could not open db connection: %s\n", err.Error())
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	// Instantiate router and set up routes
 	r := chi.NewRouter()
 
 	r.Get("/", controllers.StaticHandler(
@@ -26,7 +39,9 @@ func main() {
 		views.Must(views.ParseFS(templates.FS, "layout-page.gohtml", "faq.gohtml")),
 	))
 
-	usersController := controllers.Users{}
+	usersController := controllers.Users{
+		UserService: &models.UserService{DB: db},
+	}
 	usersController.Templates.New = views.Must(views.ParseFS(
 		templates.FS,
 		"layout-page.gohtml", "signup.gohtml",
