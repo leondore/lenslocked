@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gorilla/csrf"
 	"github.com/leondore/lenslocked/controllers"
 	"github.com/leondore/lenslocked/models"
 	"github.com/leondore/lenslocked/templates"
@@ -63,5 +64,8 @@ func main() {
 	r.Get("/assets/*", http.StripPrefix("/assets", assetsHandler).ServeHTTP)
 
 	fmt.Println("Starting the server on :3000...")
-	http.ListenAndServe(":3000", r)
+
+	csrfKey := []byte("GCEv4FtNr6sGzxymtX7fDrPXhAj7ntG6")
+	csrfMw := csrf.Protect(csrfKey, csrf.Secure(false))
+	http.ListenAndServe(":3000", csrfMw(r))
 }
