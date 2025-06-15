@@ -17,18 +17,16 @@ func Must(t Template, err error) Template {
 }
 
 func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
-	tpl, err := template.ParseFS(fs, patterns...)
-	if err != nil {
-		return Template{}, fmt.Errorf("parsing template: %w", err)
-	}
+	tpl := template.New(patterns[0])
+	tpl = tpl.Funcs(
+		template.FuncMap{
+			"csrfField": func() template.HTML {
+				return `<input type="hidden" />`
+			},
+		},
+	)
 
-	return Template{
-		htmlTpl: tpl,
-	}, nil
-}
-
-func Parse(filepath string) (Template, error) {
-	tpl, err := template.ParseFiles(filepath)
+	tpl, err := tpl.ParseFS(fs, patterns...)
 	if err != nil {
 		return Template{}, fmt.Errorf("parsing template: %w", err)
 	}
