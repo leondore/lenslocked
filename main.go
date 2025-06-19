@@ -25,6 +25,10 @@ func main() {
 	}
 	defer db.Close()
 
+	// Instantiate services
+	userService := models.UserService{DB: db}
+	sessionService := models.SessionService{DB: db}
+
 	// Instantiate router and set up routes
 	r := chi.NewRouter()
 
@@ -41,7 +45,8 @@ func main() {
 	))
 
 	usersController := controllers.Users{
-		UserService: &models.UserService{DB: db},
+		UserService:    &userService,
+		SessionService: &sessionService,
 	}
 	usersController.Templates.New = views.Must(views.ParseFS(
 		templates.FS,
