@@ -7,6 +7,10 @@ import (
 	"github.com/leondore/lenslocked/rand"
 )
 
+const (
+	MinBytesPerToken = 32
+)
+
 type Session struct {
 	ID        int
 	UserID    int
@@ -15,11 +19,14 @@ type Session struct {
 }
 
 type SessionService struct {
-	DB *sql.DB
+	DB            *sql.DB
+	BytesPerToken int
 }
 
 func (ss *SessionService) Create(userID int) (*Session, error) {
-	token, err := rand.SessionToken()
+	bytesPerToken := max(ss.BytesPerToken, MinBytesPerToken)
+
+	token, err := rand.String(bytesPerToken)
 	if err != nil {
 		return nil, fmt.Errorf("create: %w", err)
 	}
