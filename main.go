@@ -60,6 +60,8 @@ func main() {
 	r.Post("/users", usersController.Create)
 	r.Get("/signin", usersController.SignIn)
 	r.Post("/signin", usersController.ProcessSignIn)
+	r.Post("/signout", usersController.ProcessSignOut)
+	r.Get("/users/me", usersController.CurrentUser)
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
