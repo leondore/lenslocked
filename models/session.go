@@ -75,13 +75,26 @@ func (ss *SessionService) User(token string) (*User, error) {
 	row = ss.DB.QueryRow(`
 		SELECT email, password_hash
 		FROM users
-		WHERE id = $1`, user.ID)
+		WHERE id = $1;`, user.ID)
 	err = row.Scan(&user.Email, &user.PasswordHash)
 	if err != nil {
 		return nil, fmt.Errorf("user from session: %w", err)
 	}
 
 	return &user, nil
+}
+
+func (ss *SessionService) Delete(token string) error {
+	tokenHash := ss.hash(token)
+
+	_, err := ss.DB.Exec(`
+	DELETE FROM sessions
+	WHERE token_hash = $1;`, tokenHash)
+	if err != nil {
+		return fmt.Errorf("delete: %w", err)
+	}
+
+	return nil
 }
 
 func (ss *SessionService) hash(token string) string {
