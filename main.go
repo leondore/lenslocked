@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/csrf"
 	"github.com/leondore/lenslocked/controllers"
+	"github.com/leondore/lenslocked/migrations"
 	"github.com/leondore/lenslocked/models"
 	"github.com/leondore/lenslocked/templates"
 	"github.com/leondore/lenslocked/views"
@@ -25,7 +26,7 @@ func main() {
 	}
 	defer db.Close()
 
-	err = models.Migrate(db, "migrations")
+	err = models.MigrateFS(db, migrations.FS, ".")
 	if err != nil {
 		log.Fatalf("could not migrate: %s\n", err.Error())
 		os.Exit(1)
