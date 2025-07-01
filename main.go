@@ -25,6 +25,12 @@ func main() {
 	}
 	defer db.Close()
 
+	err = models.Migrate(db, "migrations")
+	if err != nil {
+		log.Fatalf("could not migrate: %s\n", err.Error())
+		os.Exit(1)
+	}
+
 	// Instantiate services
 	userService := models.UserService{DB: db}
 	sessionService := models.SessionService{DB: db}
