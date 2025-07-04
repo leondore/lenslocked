@@ -77,9 +77,13 @@ func main() {
 	assetsHandler := http.FileServer(http.Dir("assets"))
 	r.Get("/assets/*", http.StripPrefix("/assets", assetsHandler).ServeHTTP)
 
-	fmt.Println("Starting the server on :3000...")
+	umw := controllers.UserMiddleware{
+		SessionService: &sessionService,
+	}
 
 	csrfKey := []byte("GCEv4FtNr6sGzxymtX7fDrPXhAj7ntG6")
 	csrfMw := csrf.Protect(csrfKey, csrf.Secure(false))
-	http.ListenAndServe(":3000", csrfMw(r))
+
+	fmt.Println("Starting the server on :3000...")
+	http.ListenAndServe(":3000", csrfMw(umw.SetUser(r)))
 }
