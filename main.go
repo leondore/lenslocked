@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	// Open database connection
+	// Set up the database
 	cfg := models.DefaultPostgresConfig()
 	db, err := models.Open(cfg)
 	if err != nil {
@@ -36,8 +36,34 @@ func main() {
 	userService := models.UserService{DB: db}
 	sessionService := models.SessionService{DB: db}
 
+	// Set up middleware
+	umw := controllers.UserMiddleware{
+		SessionService: &sessionService,
+	}
+
+	csrfKey := []byte("GCEv4FtNr6sGzxymtX7fDrPXhAj7ntG6")
+	csrfMw := csrf.Protect(csrfKey, csrf.Secure(false))
+
+	// Set up controllers
+	usersController := controllers.Users{
+		UserService:    &userService,
+		SessionService: &sessionService,
+	}
+	usersController.Templates.New = views.Must(views.ParseFS(
+		templates.FS,
+		"layout-page.gohtml", "signup.gohtml",
+	))
+	usersController.Templates.SignIn = views.Must(views.ParseFS(
+		templates.FS,
+		"layout-page.gohtml", "signin.gohtml",
+	))
+
+	assetsHandler := http.FileServer(http.Dir("assets"))
+
 	// Instantiate router and set up routes
 	r := chi.NewRouter()
+	r.Use(csrfMw)
+	r.Use(umw.SetUser)
 
 	r.Get("/", controllers.StaticHandler(
 		views.Must(views.ParseFS(templates.FS, "layout-page.gohtml", "home.gohtml")),
@@ -51,39 +77,23 @@ func main() {
 		views.Must(views.ParseFS(templates.FS, "layout-page.gohtml", "faq.gohtml")),
 	))
 
-	usersController := controllers.Users{
-		UserService:    &userService,
-		SessionService: &sessionService,
-	}
-	usersController.Templates.New = views.Must(views.ParseFS(
-		templates.FS,
-		"layout-page.gohtml", "signup.gohtml",
-	))
-	usersController.Templates.SignIn = views.Must(views.ParseFS(
-		templates.FS,
-		"layout-page.gohtml", "signin.gohtml",
-	))
 	r.Get("/signup", usersController.New)
 	r.Post("/users", usersController.Create)
 	r.Get("/signin", usersController.SignIn)
 	r.Post("/signin", usersController.ProcessSignIn)
 	r.Post("/signout", usersController.ProcessSignOut)
-	r.Get("/users/me", usersController.CurrentUser)
+	r.Route("/users/me", func(r chi.Router) {
+		r.Use(umw.RequireUser)
+		r.Get("/", usersController.CurrentUser)
+	})
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})
 
-	assetsHandler := http.FileServer(http.Dir("assets"))
 	r.Get("/assets/*", http.StripPrefix("/assets", assetsHandler).ServeHTTP)
 
-	umw := controllers.UserMiddleware{
-		SessionService: &sessionService,
-	}
-
-	csrfKey := []byte("GCEv4FtNr6sGzxymtX7fDrPXhAj7ntG6")
-	csrfMw := csrf.Protect(csrfKey, csrf.Secure(false))
-
+	// Start server
 	fmt.Println("Starting the server on :3000...")
-	http.ListenAndServe(":3000", csrfMw(umw.SetUser(r)))
+	http.ListenAndServe(":3000", r)
 }
